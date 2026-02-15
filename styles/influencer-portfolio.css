@@ -1,0 +1,235 @@
+/* Portfolio Page Styles */
+
+.btn-create-portfolio {
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
+    color: var(--white);
+    border: none;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 1.125rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-create-portfolio:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.portfolio-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.platforms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.platform-card {
+    padding: 2rem;
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.platform-card:hover {
+    border-color: var(--primary-orange);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.platform-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid rgba(255, 140, 66, 0.1);
+}
+
+.platform-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.platform-icon.instagram {
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+}
+
+.platform-icon.tiktok {
+    background: linear-gradient(135deg, #000000, #ee1d52, #69c9d0);
+}
+
+.platform-icon.youtube {
+    background: linear-gradient(135deg, #c4302b, #ff0000);
+}
+
+.platform-icon.twitter {
+    background: linear-gradient(135deg, #1DA1F2, #14171A);
+}
+
+.platform-header h3 {
+    flex: 1;
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.btn-edit {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--white);
+    border: 2px solid rgba(255, 140, 66, 0.3);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1rem;
+}
+
+.btn-edit:hover {
+    background: var(--card-bg);
+    border-color: var(--primary-orange);
+}
+
+.platform-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: rgba(255, 140, 66, 0.05);
+    border-radius: 12px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-item .label {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    opacity: 0.7;
+}
+
+.stat-item .value {
+    font-weight: 700;
+    color: var(--primary-orange);
+    font-size: 1rem;
+}
+
+.platform-content {
+    margin-bottom: 1.5rem;
+}
+
+.platform-content h4 {
+    color: var(--text-dark);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+}
+
+.work-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.work-item {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.work-item:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.tweet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.tweet-item {
+    padding: 1rem;
+    background: rgba(255, 140, 66, 0.05);
+    border-radius: 12px;
+    border-left: 3px solid var(--primary-orange);
+}
+
+.tweet-item p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+.tweet-stats {
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    opacity: 0.6;
+}
+
+.btn-view-full {
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-view-full:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .platforms-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .portfolio-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .btn-create-portfolio {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .work-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
