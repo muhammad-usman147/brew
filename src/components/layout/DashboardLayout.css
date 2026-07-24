@@ -1,0 +1,17 @@
+.dashboard-body {
+  background: var(--bg-main);
+  min-height: 100vh;
+  padding-top: 80px;
+}
+
+.dashboard-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+}

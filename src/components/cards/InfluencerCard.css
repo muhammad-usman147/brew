@@ -1,0 +1,239 @@
+.influencers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.influencer-card {
+  padding: 0;
+  overflow: hidden;
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.influencer-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary-orange);
+}
+
+.card-header {
+  position: relative;
+  height: 200px;
+  background: linear-gradient(135deg, rgba(244, 119, 11, 0.1), rgba(255, 151, 76, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.influencer-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid var(--white);
+  box-shadow: var(--shadow-md);
+  object-fit: cover;
+}
+
+.verification-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #10b981;
+  color: var(--white);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+.card-body h3 {
+  color: var(--text-dark);
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.niche {
+  text-align: center;
+  color: var(--primary-orange);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.platform-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 140, 66, 0.05);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.platform-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.platform-icon {
+  font-size: 1.5rem;
+}
+
+.platform-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.followers {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  opacity: 0.7;
+}
+
+.engagement-rate {
+  text-align: right;
+}
+
+.influencer-card .rate-label {
+  display: block;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.influencer-card .rate-value {
+  font-weight: 700;
+  color: var(--primary-orange);
+  font-size: 1.1rem;
+}
+
+.bio {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  color: var(--text-dark);
+  opacity: 0.9;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tag {
+  padding: 0.35rem 0.75rem;
+  background: var(--card-bg);
+  color: var(--primary-orange);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(255, 140, 66, 0.1);
+}
+
+.card-stats .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-orange);
+  line-height: 1;
+}
+
+.stat-text {
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
+.btn-view-profile,
+.btn-contact {
+  flex: 1;
+  padding: 0.875rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-view-profile {
+  background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
+  color: var(--white);
+}
+
+.btn-view-profile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-contact {
+  background: var(--white);
+  color: var(--primary-orange);
+  border: 2px solid var(--primary-orange);
+}
+
+.btn-contact:hover {
+  background: var(--card-bg);
+  transform: translateY(-2px);
+}
+
+.card-footer {
+  padding: 1.5rem 2rem;
+  background: rgba(255, 140, 66, 0.03);
+  display: flex;
+  gap: 1rem;
+}
+
+.card-footer button {
+  flex: 1;
+}
+
+@media (max-width: 1200px) {
+  .influencers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .influencers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-footer {
+    flex-direction: column;
+  }
+}

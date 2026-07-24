@@ -1,0 +1,70 @@
+.search-section {
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.search-bar {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  opacity: 0.5;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 1rem 1.5rem 1rem 3.5rem;
+  border: 2px solid rgba(255, 140, 66, 0.2);
+  border-radius: 16px;
+  font-size: 1rem;
+  background: var(--white);
+  transition: var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px rgba(244, 119, 11, 0.1);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--white);
+  border: 2px solid rgba(255, 140, 66, 0.2);
+  border-radius: 12px;
+  font-weight: 500;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.filter-btn:hover {
+  background: var(--card-bg);
+  border-color: var(--primary-orange);
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
+  color: var(--white);
+  border-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .filter-buttons {
+    overflow-x: auto;
+  }
+}

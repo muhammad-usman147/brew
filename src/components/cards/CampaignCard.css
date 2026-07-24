@@ -1,0 +1,235 @@
+.campaign-stats-overview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.campaigns-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.campaign-card {
+  padding: 2rem;
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.campaign-card:hover {
+  border-color: var(--primary-orange);
+  box-shadow: var(--shadow-lg);
+}
+
+.campaign-card.draft-card {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.05), rgba(255, 255, 255, 0.7));
+}
+
+.campaign-card.completed-card {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(to right, rgba(16, 185, 129, 0.05), rgba(255, 255, 255, 0.7));
+}
+
+.campaign-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  gap: 2rem;
+}
+
+.campaign-title-section h3 {
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.campaign-status {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.campaign-status.active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.campaign-status.draft {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.campaign-status.completed {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.campaign-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  background: var(--white);
+  border: 2px solid rgba(255, 140, 66, 0.2);
+  border-radius: 10px;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.action-btn:hover {
+  background: var(--card-bg);
+  border-color: var(--primary-orange);
+  transform: translateY(-2px);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
+  color: var(--white);
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.campaign-meta {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 140, 66, 0.1);
+}
+
+.campaign-description {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-dark);
+  margin-bottom: 1.5rem;
+}
+
+.campaign-analytics {
+  background: rgba(255, 140, 66, 0.03);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.analytics-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.analytics-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-orange);
+  line-height: 1;
+}
+
+.mini-chart {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 120px;
+  gap: 0.5rem;
+}
+
+.chart-bar {
+  flex: 1;
+  background: linear-gradient(to top, var(--primary-orange), var(--secondary-orange));
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  min-height: 20px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.campaign-results {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(16, 185, 129, 0.05);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.campaign-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.proposals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.proposal-item {
+  background: var(--white);
+  border: 2px solid rgba(255, 140, 66, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: var(--transition);
+}
+
+.proposal-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+@media (max-width: 1200px) {
+  .campaign-stats-overview,
+  .analytics-grid,
+  .campaign-results {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .campaign-stats-overview,
+  .analytics-grid,
+  .campaign-results {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .campaign-footer,
+  .proposal-footer {
+    flex-direction: column;
+  }
+
+  .campaign-footer button,
+  .proposal-footer button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,28 @@
+.page-header {
+  margin-bottom: 3rem;
+}
+
+.page-header--inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.page-header--inline .page-header__content {
+  margin-bottom: 0;
+}
+
+.page-header__content h1 {
+  color: var(--primary-orange);
+  margin-bottom: 0.5rem;
+}
+
+.page-header__content p {
+  font-size: 1.125rem;
+  opacity: 0.8;
+}
+
+.page-header__content .stats-grid {
+  margin-top: 2rem;
+  margin-bottom: 0;
+}

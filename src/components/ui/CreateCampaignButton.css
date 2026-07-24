@@ -1,0 +1,25 @@
+.btn-create-campaign {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
+  color: var(--white);
+  border: none;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 1.125rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-create-campaign:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-create-campaign .icon {
+  font-size: 1.5rem;
+}
