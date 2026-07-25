@@ -100,8 +100,10 @@ export default function ClientCampaigns() {
                 <div className="campaign-actions">
                   <button className="action-btn" title="Edit" onClick={() => handleAction('edit', c.id)}>✏️</button>
                   <button className="action-btn" title="Duplicate" onClick={() => handleAction('duplicate', c.id)}>📋</button>
-                  {c.status === 'draft' && <button className="action-btn primary" onClick={() => handleAction('publish', c.id)}>🚀 Publish</button>}
+                  {c.status === 'draft' && <button className="action-btn primary" onClick={() => handleAction('publish', c.id)}>Publish Campaign</button>}
                   {c.status !== 'completed' && <button className="action-btn" title="Delete" onClick={() => handleAction('delete', c.id)}>🗑️</button>}
+                  {c.status === 'active' && <button className="action-btn primary" onClick={() => setShowProposalsModal(true)}>View Proposals ({c.proposals})</button>}
+                  {c.status === 'completed' && <button className="action-btn" onClick={() => showToast('Opening results...', 'info')}>View Results</button>}
                 </div>
               </div>
 

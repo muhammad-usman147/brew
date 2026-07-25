@@ -33,8 +33,8 @@ export default function ClientDashboard() {
     <div className="dashboard-body">
       <DashboardNav role="client" />
       <div className="dashboard-container">
-        <div className="dashboard-header">
-          <div className="header-content">
+        <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div className="header-content" style={{ marginBottom: 0 }}>
             <h1>Find Perfect Influencers</h1>
             <p>Search, connect, and collaborate with top content creators</p>
           </div>
