@@ -1,5 +1,7 @@
+'use client'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import BrewLogo from '../components/BrewLogo'
 import Toast from '../components/Toast'
 import { useToast } from '../hooks/useToast'
@@ -12,7 +14,7 @@ const slides = [
 ]
 
 export default function Landing() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const { toast, showToast, hideToast } = useToast()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [navScrolled, setNavScrolled] = useState(false)
@@ -65,8 +67,8 @@ export default function Landing() {
             <a href="#why-brew">Why Brew</a>
             <a href="#pricing">Pricing</a>
             <a href="#contact">Contact</a>
-            <Link to="/influencer/dashboard" className="nav-btn secondary">Influencer Login</Link>
-            <Link to="/client/dashboard" className="nav-btn primary">Client Login</Link>
+            <Link href="/influencer/dashboard" className="nav-btn secondary">Influencer Login</Link>
+            <Link href="/client/dashboard" className="nav-btn primary">Client Login</Link>
           </div>
         </div>
       </nav>
@@ -82,7 +84,7 @@ export default function Landing() {
               Brew brings together brands and content creators in a seamless marketplace. Find authentic partnerships that drive real results.
             </p>
             <div className="hero-cta animate-in delay-2">
-              <Link to="/client/dashboard" className="btn-large primary">Get Started</Link>
+              <Link href="/client/dashboard" className="btn-large primary">Get Started</Link>
               <a href="#why-brew" className="btn-large secondary">Learn More</a>
             </div>
             <div className="hero-stats animate-in delay-3">
@@ -231,7 +233,7 @@ export default function Landing() {
                 <ul className="plan-features">
                   {plan.features.map((f, j) => <li key={j}>✓ {f}</li>)}
                 </ul>
-                <Link to={plan.btnText === 'Contact Sales' ? '/#contact' : '/client/dashboard'} className={`plan-btn ${plan.btn}`}>{plan.btnText}</Link>
+                <Link href={plan.btnText === 'Contact Sales' ? '#contact' : '/client/dashboard'} className={`plan-btn ${plan.btn}`}>{plan.btnText}</Link>
               </div>
             ))}
           </div>
@@ -302,8 +304,8 @@ export default function Landing() {
               <ul>
                 <li><a href="#why-brew">Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
-                <li><Link to="/influencer/dashboard">For Influencers</Link></li>
-                <li><Link to="/client/dashboard">For Brands</Link></li>
+                <li><Link href="/influencer/dashboard">For Influencers</Link></li>
+                <li><Link href="/client/dashboard">For Brands</Link></li>
               </ul>
             </div>
             <div className="footer-col">
@@ -340,3 +342,4 @@ export default function Landing() {
     </div>
   )
 }
+

@@ -1,40 +1,96 @@
-import { useState } from 'react'
-import DashboardNav from '../../components/DashboardNav'
-import Toast from '../../components/Toast'
-import { useToast } from '../../hooks/useToast'
-
-
-const clients = [
-  { id:1, name:'Marcus Chen', company:'TechCorp Industries', industry:'🏢 Technology', desc:'Leading technology company specializing in innovative software solutions.', avatar:'https://i.pravatar.cc/150?img=12', projects:5, earned:'$12.5K', rating:'⭐ 5.0', lastWorked:'1 week ago', history:[{name:'Smart Watch Campaign',date:'Jan 2024',amount:'$3,500'},{name:'Holiday Tech Review',date:'Dec 2023',amount:'$4,200'},{name:'Product Launch Series',date:'Oct 2023',amount:'$4,800'}] },
-  { id:2, name:'Emily Johnson', company:'EcoThreads Co.', industry:'👗 Fashion', desc:'Sustainable fashion brand promoting eco-friendly clothing.', avatar:'https://i.pravatar.cc/150?img=1', projects:8, earned:'$18.2K', rating:'⭐ 4.9', lastWorked:'3 days ago', history:[{name:'Summer Collection Launch',date:'Jan 2024',amount:'$2,500'},{name:'Sustainable Fashion Week',date:'Dec 2023',amount:'$3,200'},{name:'Fall Lookbook',date:'Sep 2023',amount:'$2,800'}] },
-  { id:3, name:'David Martinez', company:'BrewMasters Coffee', industry:'☕ Food & Beverage', desc:'Artisan coffee roasters with a passion for quality beans.', avatar:'https://i.pravatar.cc/150?img=68', projects:3, earned:'$3.6K', rating:'⭐ 4.8', lastWorked:'2 weeks ago', history:[{name:'Cold Brew Launch',date:'Jan 2024',amount:'$1,200'},{name:'Holiday Blend Promo',date:'Dec 2023',amount:'$1,400'}] },
-  { id:4, name:'Lisa Anderson', company:'Harmony Wellness', industry:'🧘 Health & Wellness', desc:'Holistic wellness products for mind, body, and soul.', avatar:'https://i.pravatar.cc/150?img=29', projects:4, earned:'$4.2K', rating:'⭐ 5.0', lastWorked:'5 days ago', history:[{name:'Wellness Ambassador',date:'Ongoing',amount:'$1,500/mo'},{name:'Product Line Review',date:'Dec 2023',amount:'$2,200'}] },
-]
+'use client'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import DashboardNav from '@/components/DashboardNav'
+import Toast from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
+import { supabase } from '@/lib/supabase/client'
 
 export default function InfluencerConnections() {
   const { toast, showToast, hideToast } = useToast()
-  const [search, setSearch] = useState('')
+  const router = useRouter()
+  const [connections, setConnections] = useState([])
+  const [search, setSearch]           = useState('')
+  const [filter, setFilter]           = useState('all')
+  const [loading, setLoading]         = useState(true)
+  const [acting, setActing]           = useState(null) // connection id being acted on
 
-  const filtered = clients.filter(c =>
-    !search || [c.name, c.company, c.industry].some(t => t.toLowerCase().includes(search.toLowerCase()))
-  )
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const res = await fetch(`/api/auth/profile?email=${encodeURIComponent(user.email)}`)
+      const { profile } = await res.json()
+      if (!profile) return
+
+      const connRes = await fetch(`/api/connections?influencer_id=${profile.id}`)
+      const payload = await connRes.json()
+      setConnections(payload.data || [])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const handleStatusChange = async (connectionId, newStatus) => {
+    setActing(connectionId)
+    const res = await fetch(`/api/connections/${connectionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+    const payload = await res.json()
+    setActing(null)
+
+    if (!res.ok) { showToast(payload.error || 'Failed', 'error'); return }
+
+    setConnections(prev => prev.map(c => c.id === connectionId ? { ...c, status: newStatus } : c))
+    const msgs = { active: 'Connection accepted!', blocked: 'Connection blocked.' }
+    showToast(msgs[newStatus] || 'Updated', newStatus === 'active' ? 'success' : 'info')
+  }
+
+  const goToMessages = (connectionId) => {
+    router.push(`/influencer/messages?connection=${connectionId}`)
+  }
+
+  const filtered = connections.filter(c => {
+    const client = c.clients
+    const matchSearch = !search || [client?.name, client?.company_name]
+      .some(t => t?.toLowerCase().includes(search.toLowerCase()))
+    const matchFilter = filter === 'all' || c.status === filter
+    return matchSearch && matchFilter
+  })
+
+  const counts = {
+    active:  connections.filter(c => c.status === 'active').length,
+    pending: connections.filter(c => c.status === 'pending').length,
+    blocked: connections.filter(c => c.status === 'blocked').length,
+  }
 
   return (
     <div className="dashboard-body">
       <DashboardNav role="influencer" />
       <div className="dashboard-container">
+
         <div className="dashboard-header">
           <div className="header-content">
             <h1>My Connections</h1>
-            <p>Clients you've worked with and built relationships</p>
+            <p>Clients who want to work with you</p>
           </div>
         </div>
 
         <div className="connection-stats">
-          {[['🤝','8','Active Clients'],['✅','23','Completed Projects'],['💰','$38.5K','Total Earned'],['⭐','4.9','Avg. Rating']].map(([icon,val,label]) => (
+          {[
+            ['🤝', counts.active,           'Active Clients'],
+            ['⏳', counts.pending,          'Pending Requests'],
+            ['✅', connections.length,      'Total'],
+            ['🚫', counts.blocked,          'Blocked'],
+          ].map(([icon, val, label]) => (
             <div key={label} className="stat-card glass">
               <div className="stat-icon">{icon}</div>
-              <div className="stat-info"><span className="stat-value">{val}</span><span className="stat-label">{label}</span></div>
+              <div className="stat-info">
+                <span className="stat-value">{val}</span>
+                <span className="stat-label">{label}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -42,50 +98,147 @@ export default function InfluencerConnections() {
         <div className="search-section glass">
           <div className="search-bar">
             <span className="search-icon">🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search clients by name or company..." />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search clients by name or company..."
+            />
+          </div>
+          <div className="filter-buttons">
+            {[['all','All'],['pending','Pending'],['active','Active'],['blocked','Blocked']].map(([val, label]) => (
+              <button
+                key={val}
+                className={`filter-btn${filter === val ? ' active' : ''}`}
+                onClick={() => setFilter(val)}
+              >
+                {label}
+                {val === 'pending' && counts.pending > 0 && (
+                  <span className="filter-badge">{counts.pending}</span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="connections-grid">
-          {filtered.map(c => (
-            <div key={c.id} className="client-card glass">
-              <div className="client-header">
-                <img src={c.avatar} alt={c.name} className="client-avatar" />
-                <div className="verified-badge">✓</div>
-              </div>
-              <div className="client-body">
-                <h3>{c.name}</h3>
-                <p className="company">{c.company}</p>
-                <div className="company-details">
-                  <p className="industry">{c.industry}</p>
-                  <p className="description">{c.desc}</p>
-                </div>
-                <div className="client-stats-row">
-                  <div className="stat-item"><span className="stat-value">{c.projects}</span><span className="stat-label">Projects</span></div>
-                  <div className="stat-item"><span className="stat-value">{c.earned}</span><span className="stat-label">Earned</span></div>
-                  <div className="stat-item"><span className="stat-value">{c.rating}</span><span className="stat-label">Rating</span></div>
-                </div>
-                <div className="last-worked"><span className="icon">📅</span><span>Last project: {c.lastWorked}</span></div>
-                <div className="project-history">
-                  <h4>Collaboration History</h4>
-                  <div className="project-list">
-                    {c.history.map((h,i) => (
-                      <div key={i} className="project-item">
-                        <div className="project-info"><span className="project-name">{h.name}</span><span className="project-date">{h.date}</span></div>
-                        <span className="project-amount">{h.amount}</span>
-                      </div>
-                    ))}
+          {loading && (
+            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+              <div className="empty-icon">⏳</div><h3>Loading...</h3>
+            </div>
+          )}
+
+          {!loading && filtered.length === 0 && (
+            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+              <div className="empty-icon">🤝</div>
+              <h3>{filter === 'pending' ? 'No pending requests' : 'No connections yet'}</h3>
+              <p>
+                {filter === 'pending'
+                  ? 'You\'ll be notified when a client sends you a connection request'
+                  : 'Apply to campaigns and accept connection requests to see clients here'}
+              </p>
+            </div>
+          )}
+
+          {!loading && filtered.map(c => {
+            const client  = c.clients
+            const isActing = acting === c.id
+            return (
+              <div key={c.id} className={`client-card glass conn-card--${c.status}`}>
+
+                {/* Pending banner */}
+                {c.status === 'pending' && (
+                  <div className="conn-pending-banner">
+                    ⏳ Connection request from this client
+                  </div>
+                )}
+
+                <div className="client-header">
+                  <img
+                    src={client?.avatar_url || `https://i.pravatar.cc/100?u=${client?.id}`}
+                    alt={client?.name}
+                    className="client-avatar"
+                  />
+                  <div className={`verified-badge ${c.status === 'active' ? 'active' : c.status === 'pending' ? 'pending' : 'neutral'}`}>
+                    {c.status === 'active' ? '✓' : c.status === 'pending' ? '⏳' : '—'}
                   </div>
                 </div>
+
+                <div className="client-body">
+                  <h3>{client?.name}</h3>
+                  <p className="company">{client?.company_name}</p>
+                  {client?.industry && <p className="industry">🏢 {client.industry}</p>}
+                  {client?.description && (
+                    <p className="description" style={{ marginTop: '0.5rem', fontSize: '0.9rem', opacity: 0.75 }}>
+                      {client.description}
+                    </p>
+                  )}
+                  <div className="last-worked" style={{ marginTop: '0.75rem' }}>
+                    <span className="icon">🔗</span>
+                    <span>Status: <strong style={{ textTransform: 'capitalize' }}>{c.status}</strong></span>
+                  </div>
+                </div>
+
+                <div className="client-footer" style={{ flexDirection: 'column', gap: '0.75rem' }}>
+                  {/* Accept / Decline for pending */}
+                  {c.status === 'pending' && (
+                    <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
+                      <button
+                        className="btn-secondary"
+                        style={{ flex: 1 }}
+                        disabled={isActing}
+                        onClick={() => handleStatusChange(c.id, 'blocked')}
+                      >
+                        {isActing ? '…' : '✕ Decline'}
+                      </button>
+                      <button
+                        className="btn-primary"
+                        style={{ flex: 1 }}
+                        disabled={isActing}
+                        onClick={() => handleStatusChange(c.id, 'active')}
+                      >
+                        {isActing ? '…' : '✓ Accept'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Message (only for active) */}
+                  {c.status === 'active' && (
+                    <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
+                      <button
+                        className="btn-secondary"
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        onClick={() => goToMessages(c.id)}
+                      >
+                        💬 Message
+                      </button>
+                      <button
+                        className="btn-primary"
+                        style={{ flex: 1 }}
+                        onClick={() => showToast('Profile view coming soon', 'info')}
+                      >
+                        👁️ View Profile
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Unblock for blocked */}
+                  {c.status === 'blocked' && (
+                    <button
+                      className="btn-secondary"
+                      style={{ width: '100%' }}
+                      disabled={isActing}
+                      onClick={() => handleStatusChange(c.id, 'active')}
+                    >
+                      {isActing ? '…' : '🔓 Unblock'}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="client-footer">
-                <button className="btn-secondary" onClick={() => showToast('Opening messages...','info')}><span className="icon">💬</span><span>Message</span></button>
-                <button className="btn-primary" onClick={() => showToast('Opening profile...','info')}><span className="icon">👁️</span><span>View Profile</span></button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
+
       {toast && <Toast key={toast.id} message={toast.message} type={toast.type} onClose={hideToast} />}
     </div>
   )

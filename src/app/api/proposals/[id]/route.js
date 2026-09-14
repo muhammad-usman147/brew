@@ -1,0 +1,23 @@
+import { supabaseAdmin } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+
+// PATCH /api/proposals/:id — accept or decline
+export async function PATCH(request, { params }) {
+  const body = await request.json()
+  const { status } = body
+
+  const validStatuses = ['pending', 'accepted', 'declined', 'withdrawn']
+  if (!validStatuses.includes(status)) {
+    return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('proposals')
+    .update({ status })
+    .eq('id', params.id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data })
+}

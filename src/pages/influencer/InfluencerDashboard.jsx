@@ -1,16 +1,10 @@
+'use client'
 import { useState } from 'react'
-import DashboardNav from '../../components/DashboardNav'
-import Toast from '../../components/Toast'
-import { useToast } from '../../hooks/useToast'
-
-
-const jobs = [
-  { id:1, title:'Instagram Campaign for Sustainable Fashion Brand', category:'fashion', badges:['✓ Verified','Fashion'], budget:'$1,500 - $2,500', location:'Remote', followers:'50K+ followers', posted:'2 days ago', description:'Looking for fashion influencers to promote our new sustainable clothing line. Must have engaged audience interested in eco-friendly fashion. Deliverables include 3 Instagram posts and 5 stories over 2 weeks.', client:{name:'EcoThreads Co.',avatar:'https://i.pravatar.cc/150?img=1',spent:'$45K+',campaigns:23}, proposals:8 },
-  { id:2, title:'YouTube Tech Review - Smart Home Devices', category:'tech', badges:['✓ Verified','Technology','🔥 Urgent'], budget:'$3,000 - $4,500', location:'USA', followers:'100K+ subscribers', posted:'5 hours ago', description:'Seeking tech reviewers with expertise in smart home devices. Create detailed review video (10-15 mins) covering features, setup, and honest opinions. Include unboxing and demonstration.', client:{name:'SmartLife Technologies',avatar:'https://i.pravatar.cc/150?img=52',spent:'$128K+',campaigns:56}, proposals:3, attachments:'2 attachments' },
-  { id:3, title:'TikTok Campaign - New Coffee Product Launch', category:'food', badges:['✓ Verified','Food & Beverage'], budget:'$800 - $1,200', location:'Remote', followers:'30K+ followers', posted:'1 day ago', description:'Create engaging TikTok content showcasing our new cold brew coffee line. Looking for creative food/lifestyle creators. Deliverables: 5 TikTok videos with trending audio and our branded hashtag.', client:{name:'BrewMasters Coffee',avatar:'https://i.pravatar.cc/150?img=68',spent:'$18K+',campaigns:12}, proposals:15, savedDefault:true },
-  { id:4, title:'Wellness Brand Ambassador - 3 Month Campaign', category:'lifestyle', badges:['✓ Verified','Lifestyle','⭐ Featured'], budget:'$5,000 - $8,000', location:'Remote', followers:'75K+ followers', posted:'3 days ago', description:'Seeking wellness influencers for long-term partnership. Promote our holistic wellness products across Instagram and YouTube. Monthly content package includes product reviews, tutorials, and lifestyle integration posts.', client:{name:'Harmony Wellness',avatar:'https://i.pravatar.cc/150?img=29',spent:'$92K+',campaigns:34}, proposals:21 },
-  { id:5, title:'Instagram Reels - Mobile App Promotion', category:'tech', badges:['✓ Verified','Technology'], budget:'$1,200 - $1,800', location:'Remote', followers:'40K+ followers', posted:'4 days ago', description:"Create 4 Instagram Reels demonstrating our productivity app's key features. Target audience: young professionals and students. Show real use cases and emphasize time-saving benefits.", client:{name:'TaskFlow Inc.',avatar:'https://i.pravatar.cc/150?img=11',spent:'$31K+',campaigns:18}, proposals:11 },
-]
+import DashboardNav from '@/components/DashboardNav'
+import Toast from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
+import { useSupabaseData } from '@/hooks/useSupabaseData'
+import { supabase } from '@/lib/supabase/client'
 
 export default function InfluencerDashboard() {
   const { toast, showToast, hideToast } = useToast()
@@ -18,14 +12,51 @@ export default function InfluencerDashboard() {
   const [tab, setTab] = useState('all-jobs')
   const [search, setSearch] = useState('')
   const [showProposalModal, setShowProposalModal] = useState(false)
+  const [selectedCampaign, setSelectedCampaign] = useState(null)
+  const [proposalForm, setProposalForm] = useState({ budget: '', delivery_days: '', cover_letter: '' })
+  const [submitting, setSubmitting] = useState(false)
 
-  const filtered = jobs.filter(j => {
-    const matchFilter = filter === 'all' || j.category === filter
-    const matchSearch = !search || [j.title, j.description].some(t => t.toLowerCase().includes(search.toLowerCase()))
+  // Fetch real public campaigns
+  const { data: campaigns, loading, error } = useSupabaseData('/api/campaigns?type=public')
+
+  const filtered = (campaigns || []).filter(c => {
+    const matchFilter = filter === 'all' || c.category?.toLowerCase() === filter
+    const matchSearch = !search || [c.title, c.description].some(t => t?.toLowerCase().includes(search.toLowerCase()))
     return matchFilter && matchSearch
   })
 
-  const handleApply = () => { showToast('Proposal submitted!', 'success'); setShowProposalModal(false) }
+  const handleApply = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { showToast('Not logged in', 'error'); setSubmitting(false); return }
+
+    const res = await fetch('/api/auth/profile?email=' + encodeURIComponent(user.email))
+    const { profile } = await res.json()
+    if (!profile) { showToast('Profile not found', 'error'); setSubmitting(false); return }
+
+    const proposalRes = await fetch('/api/proposals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        campaign_id: selectedCampaign.id,
+        influencer_id: profile.id,
+        budget: parseFloat(proposalForm.budget),
+        delivery_days: parseInt(proposalForm.delivery_days) || null,
+        cover_letter: proposalForm.cover_letter
+      })
+    })
+    const payload = await proposalRes.json()
+    setSubmitting(false)
+
+    if (!proposalRes.ok) {
+      showToast(payload.error || 'Failed to submit proposal', 'error')
+      return
+    }
+    showToast('Proposal submitted successfully!', 'success')
+    setShowProposalModal(false)
+    setProposalForm({ budget: '', delivery_days: '', cover_letter: '' })
+  }
 
   return (
     <div className="dashboard-body">
@@ -37,7 +68,7 @@ export default function InfluencerDashboard() {
             <p>Discover opportunities that match your expertise</p>
           </div>
           <div className="quick-stats">
-            {[['👁️','1,247','Profile Views'],['📨','12','Active Proposals'],['💰','$8,450','This Month']].map(([icon,val,label]) => (
+            {[['👁️','—','Profile Views'],['📨','—','Active Proposals'],['💰','—','This Month']].map(([icon,val,label]) => (
               <div key={label} className="stat-card glass">
                 <div className="stat-icon">{icon}</div>
                 <div className="stat-info"><span className="stat-value">{val}</span><span className="stat-label">{label}</span></div>
@@ -59,46 +90,68 @@ export default function InfluencerDashboard() {
         </div>
 
         <div className="tabs-container">
-          {[['all-jobs','All Jobs'],['applied','Applied (12)'],['saved','Saved (5)']].map(([val,label]) => (
+          {[['all-jobs','All Jobs'],['applied','Applied'],['saved','Saved']].map(([val,label]) => (
             <button key={val} className={`tab${tab===val?' active':''}`} onClick={() => setTab(val)}>{label}</button>
           ))}
         </div>
 
         {tab === 'all-jobs' && (
           <div className="jobs-grid">
-            {filtered.map(j => (
-              <div key={j.id} className="job-card glass" data-category={j.category}>
+            {loading && (
+              <div className="empty-state">
+                <div className="empty-icon">⏳</div>
+                <h3>Loading campaigns...</h3>
+              </div>
+            )}
+            {error && (
+              <div className="empty-state">
+                <div className="empty-icon">⚠️</div>
+                <h3>Could not load campaigns</h3>
+                <p>{error}</p>
+              </div>
+            )}
+            {!loading && !error && filtered.length === 0 && (
+              <div className="empty-state">
+                <div className="empty-icon">📢</div>
+                <h3>{search ? 'No campaigns found' : 'No campaigns yet'}</h3>
+                <p>{search ? 'Try adjusting your search' : 'Campaigns posted by brands will appear here'}</p>
+              </div>
+            )}
+            {!loading && filtered.map(c => (
+              <div key={c.id} className="job-card glass" data-category={c.category}>
                 <div className="job-header">
                   <div className="job-title-section">
-                    <h3>{j.title}</h3>
+                    <h3>{c.title}</h3>
                     <div className="job-badges">
-                      {j.badges.map((b,i) => (
-                        <span key={i} className={i===0 ? 'badge-verified' : b.includes('🔥') ? 'badge-urgent' : b.includes('⭐') ? 'badge-featured' : 'badge-category'}>{b}</span>
-                      ))}
+                      <span className="badge-verified">✓ Verified</span>
+                      {c.category && <span className="badge-category">{c.category}</span>}
                     </div>
                   </div>
-                  <button className={`save-btn${j.savedDefault?' saved':''}`} onClick={() => showToast('Job saved!', 'success')}><span className="icon">🔖</span></button>
+                  <button className="save-btn" onClick={() => showToast('Saved!', 'success')}><span className="icon">🔖</span></button>
                 </div>
                 <div className="job-meta">
-                  <span className="meta-item"><span className="icon">💰</span><strong>{j.budget}</strong></span>
-                  <span className="meta-item"><span className="icon">📍</span>{j.location}</span>
-                  <span className="meta-item"><span className="icon">👥</span>{j.followers}</span>
-                  <span className="meta-item"><span className="icon">📅</span>Posted {j.posted}</span>
+                  {c.budget && <span className="meta-item"><span className="icon">💰</span><strong>${c.budget}</strong></span>}
+                  {c.location && <span className="meta-item"><span className="icon">📍</span>{c.location}</span>}
+                  {c.min_followers && <span className="meta-item"><span className="icon">👥</span>{c.min_followers.toLocaleString()}+ followers</span>}
+                  <span className="meta-item"><span className="icon">📅</span>{new Date(c.created_at).toLocaleDateString()}</span>
                 </div>
-                <p className="job-description">{j.description}</p>
-                <div className="job-details-extra">
-                  <div className="client-info">
-                    <img src={j.client.avatar} alt={j.client.name} className="client-avatar" />
-                    <div className="client-details">
-                      <span className="client-name">{j.client.name}</span>
-                      <span className="client-stats">{j.client.spent} spent • {j.client.campaigns} campaigns</span>
+                <p className="job-description">{c.description}</p>
+                {c.clients && (
+                  <div className="job-details-extra">
+                    <div className="client-info">
+                      <img src={c.clients.avatar_url || `https://i.pravatar.cc/48?u=${c.clients.id}`} alt={c.clients.name} className="client-avatar" />
+                      <div className="client-details">
+                        <span className="client-name">{c.clients.company_name || c.clients.name}</span>
+                        <span className="client-stats">#{c.campaign_no}</span>
+                      </div>
                     </div>
                   </div>
-                  {j.attachments && <div className="attachments"><span className="attachment-icon">📎</span><span>{j.attachments}</span></div>}
-                </div>
+                )}
                 <div className="job-footer">
-                  <div className="proposals-count"><span className="icon">📝</span><span>{j.proposals} proposals</span></div>
-                  <button className="btn-apply" onClick={() => setShowProposalModal(true)}>Submit Proposal</button>
+                  <div className="proposals-count"><span className="icon">📝</span><span>{c.campaign_no}</span></div>
+                  <button className="btn-apply" onClick={() => { setSelectedCampaign(c); setShowProposalModal(true) }}>
+                    Submit Proposal
+                  </button>
                 </div>
               </div>
             ))}
@@ -107,54 +160,62 @@ export default function InfluencerDashboard() {
 
         {tab !== 'all-jobs' && (
           <div className="empty-state">
-            <div className="empty-icon">{tab==='applied'?'📝':'🔖'}</div>
+            <div className="empty-icon">{tab === 'applied' ? '📝' : '🔖'}</div>
             <h3>Your {tab} jobs will appear here</h3>
-            <p>{tab==='applied'?'Submit proposals to campaigns':'Save interesting campaigns to review later'}</p>
+            <p>{tab === 'applied' ? 'Submit proposals to campaigns' : 'Save interesting campaigns to review later'}</p>
           </div>
         )}
       </div>
 
-      {showProposalModal && (
+      {/* Proposal Modal */}
+      {showProposalModal && selectedCampaign && (
         <div className="modal" onClick={e => e.target === e.currentTarget && setShowProposalModal(false)}>
           <div className="modal-content glass">
             <div className="modal-header">
               <h2>Submit Your Proposal</h2>
               <button className="modal-close" onClick={() => setShowProposalModal(false)}>×</button>
             </div>
-            <form onSubmit={e => { e.preventDefault(); handleApply() }}>
+            <form onSubmit={handleApply}>
               <div className="modal-body">
+                <p style={{ marginBottom: '1.5rem', opacity: 0.7 }}>
+                  Applying to: <strong style={{ opacity: 1 }}>{selectedCampaign.title}</strong>
+                </p>
                 <div className="form-group">
-                  <label>Your Rate *</label>
-                  <div className="input-with-icon"><span className="input-icon">$</span><input type="number" placeholder="2000" required style={{paddingLeft:'2.5rem'}} /></div>
+                  <label>Your Rate (USD) *</label>
+                  <div className="input-with-icon">
+                    <span className="input-icon">$</span>
+                    <input type="number" placeholder="2000" required style={{ paddingLeft: '2.5rem' }}
+                      value={proposalForm.budget}
+                      onChange={e => setProposalForm(f => ({ ...f, budget: e.target.value }))} />
+                  </div>
                   <span className="help-text">Enter your proposed rate for this campaign</span>
                 </div>
                 <div className="form-group">
-                  <label>Delivery Time *</label>
-                  <select required>
+                  <label>Delivery Time (days) *</label>
+                  <select required value={proposalForm.delivery_days}
+                    onChange={e => setProposalForm(f => ({ ...f, delivery_days: e.target.value }))}>
                     <option value="">Select timeline</option>
-                    <option value="1-3">1-3 days</option>
-                    <option value="4-7">4-7 days</option>
-                    <option value="1-2">1-2 weeks</option>
-                    <option value="2-4">2-4 weeks</option>
-                    <option value="1m+">1 month+</option>
+                    <option value="3">1-3 days</option>
+                    <option value="7">4-7 days</option>
+                    <option value="14">1-2 weeks</option>
+                    <option value="28">2-4 weeks</option>
+                    <option value="45">1 month+</option>
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Cover Letter *</label>
-                  <textarea rows={8} placeholder="Introduce yourself, explain why you're a great fit, and describe your approach to this campaign..." required />
+                  <textarea rows={8} required
+                    placeholder="Introduce yourself, explain why you're a great fit, and describe your approach..."
+                    value={proposalForm.cover_letter}
+                    onChange={e => setProposalForm(f => ({ ...f, cover_letter: e.target.value }))} />
                   <span className="help-text">Make it personal and show how you can add value</span>
-                </div>
-                <div className="form-group">
-                  <label>Relevant Portfolio Items (Optional)</label>
-                  <div className="portfolio-items">
-                    <div className="portfolio-item"><input type="checkbox" id="port1" /><label htmlFor="port1">Instagram Fashion Campaign 2024</label></div>
-                    <div className="portfolio-item"><input type="checkbox" id="port2" /><label htmlFor="port2">Brand Collaboration Showcase</label></div>
-                  </div>
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setShowProposalModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Submit Proposal</button>
+                <button type="submit" className="btn-primary" disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit Proposal'}
+                </button>
               </div>
             </form>
           </div>
