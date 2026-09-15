@@ -12,7 +12,7 @@ export default function CampaignModal({ onClose, onSubmit }) {
     requirements: '',
     location: '',
     minFollowers: '',
-    status: 'live',
+    type: 'public',
   })
 
   const handle = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -20,7 +20,7 @@ export default function CampaignModal({ onClose, onSubmit }) {
   const handleSubmit = e => {
     e.preventDefault()
     if (!form.title || !form.category || !form.budget || !form.description) return
-    onSubmit(form)
+    onSubmit({ ...form, status: form.type === 'public' ? 'live' : form.type })
   }
 
   return (
@@ -95,10 +95,10 @@ export default function CampaignModal({ onClose, onSubmit }) {
               />
             </FormGroup>
           </div>
-          <FormGroup label="Campaign Status">
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+          <FormGroup label="Campaign Visibility">
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
               {[
-                ['live', '🌐 Live'],
+                ['public', '🌐 Public (Visible to all creators)'],
                 ['private', '🔒 Private'],
                 ['draft', '📝 Draft'],
               ].map(([val, label]) => (
@@ -109,14 +109,14 @@ export default function CampaignModal({ onClose, onSubmit }) {
                     alignItems: 'center',
                     gap: '0.5rem',
                     cursor: 'pointer',
-                    fontWeight: form.status === val ? 700 : 400,
+                    fontWeight: form.type === val ? 700 : 400,
                   }}
                 >
                   <input
                     type="radio"
-                    name="status"
+                    name="type"
                     value={val}
-                    checked={form.status === val}
+                    checked={form.type === val}
                     onChange={handle}
                   />
                   {label}

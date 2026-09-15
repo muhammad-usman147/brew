@@ -1,31 +1,115 @@
-import { useState } from 'react'
-import DashboardNav from '../../components/DashboardNav'
-import CampaignModal from '../../components/CampaignModal'
-import Toast from '../../components/Toast'
-import { useToast } from '../../hooks/useToast'
-
-const influencers = [
-  { id:1, name:'Sarah Mitchell', niche:'Fashion & Lifestyle', platform:'instagram', platformLabel:'Instagram', platformIcon:'📷', followers:'125K followers', engagement:'4.8%', avatar:'https://i.pravatar.cc/150?img=33', rate:'$1.5K', campaigns:23, rating:'4.9', bio:'Sustainable fashion advocate sharing style tips and eco-friendly brands. Authentic engagement with millennial and Gen-Z audiences.', tags:['Fashion','Sustainable','Lifestyle'] },
-  { id:2, name:'Tech with Jason', niche:'Technology & Reviews', platform:'youtube', platformLabel:'YouTube', platformIcon:'📹', followers:'450K subscribers', engagementLabel:'Avg. Views:', engagement:'85K', avatar:'https://i.pravatar.cc/150?img=14', rate:'$3.5K', campaigns:56, rating:'5.0', bio:'In-depth tech reviews and tutorials. Specializing in smart home devices, gadgets, and consumer electronics with honest opinions.', tags:['Tech','Reviews','Smart Home'] },
-  { id:3, name:"Emma's Kitchen", niche:'Food & Cooking', platform:'tiktok', platformLabel:'TikTok', platformIcon:'🎵', followers:'280K followers', engagement:'8.2%', avatar:'https://i.pravatar.cc/150?img=45', rate:'$1.2K', campaigns:34, rating:'4.8', bio:'Quick recipes and food hacks that go viral. Known for creative presentations and trending audio usage. Perfect for food brands.', tags:['Food','Cooking','Recipes'] },
-  { id:4, name:'Wellness with Maya', niche:'Health & Wellness', platform:'instagram', platformLabel:'Instagram', platformIcon:'📷', followers:'195K followers', engagement:'6.5%', avatar:'https://i.pravatar.cc/150?img=27', rate:'$2.1K', campaigns:41, rating:'4.9', bio:'Holistic wellness coach sharing yoga, meditation, and healthy living tips. Strong community engagement and authentic recommendations.', tags:['Wellness','Yoga','Lifestyle'] },
-]
+'use client'
+import { useState, useEffect } from 'react'
+import DashboardNav from '@/components/DashboardNav'
+import CampaignModal from '@/components/CampaignModal'
+import Toast from '@/components/Toast'
+import { useToast } from '@/hooks/useToast'
+import { supabase } from '@/lib/supabase/client'
 
 export default function ClientDashboard() {
   const { toast, showToast, hideToast } = useToast()
-  const [showModal, setShowModal] = useState(false)
-  const [filter, setFilter] = useState('all')
-  const [search, setSearch] = useState('')
+  const [showModal, setShowModal]       = useState(false)
+  const [filter, setFilter]             = useState('all')
+  const [search, setSearch]             = useState('')
+  const [influencers, setInfluencers]   = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [myProfile, setMyProfile]       = useState(null)
+  // map of influencer_id → connection record (id, status)
+  const [connMap, setConnMap]           = useState({})
+  // set of influencer_ids currently being requested
+  const [requesting, setRequesting]     = useState(new Set())
+
+  useEffect(() => {
+    async function load() {
+      // 1. Get logged-in client profile
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const res = await fetch(`/api/auth/profile?email=${encodeURIComponent(user.email)}`)
+      const { profile } = await res.json()
+      if (!profile) return
+      setMyProfile(profile)
+
+      // 2. Load influencers
+      const infRes = await fetch('/api/influencers')
+      const infPayload = await infRes.json()
+      setInfluencers(infPayload.data || [])
+
+      // 3. Load existing connections for this client so buttons reflect real state
+      const connRes = await fetch(`/api/connections?client_id=${profile.id}`)
+      const connPayload = await connRes.json()
+      const map = {}
+      for (const c of connPayload.data || []) {
+        map[c.influencer_id] = { id: c.id, status: c.status }
+      }
+      setConnMap(map)
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const handleConnect = async (influencer) => {
+    if (!myProfile) return
+    const existing = connMap[influencer.id]
+
+    // Already connected or pending — do nothing (button is disabled)
+    if (existing) return
+
+    setRequesting(prev => new Set(prev).add(influencer.id))
+    const res = await fetch('/api/connections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ influencer_id: influencer.id, client_id: myProfile.id })
+    })
+    const payload = await res.json()
+    setRequesting(prev => { const s = new Set(prev); s.delete(influencer.id); return s })
+
+    if (!res.ok) {
+      showToast(payload.error || 'Failed to send request', 'error')
+      return
+    }
+    // Update map so button flips immediately
+    setConnMap(prev => ({
+      ...prev,
+      [influencer.id]: { id: payload.data.id, status: 'pending' }
+    }))
+    showToast(`Connection request sent to ${influencer.name}!`, 'success')
+  }
+
+  // Derive button label + style per influencer
+  const getConnButton = (inf) => {
+    if (requesting.has(inf.id)) return { label: 'Sending…', disabled: true, style: 'pending' }
+    const conn = connMap[inf.id]
+    if (!conn) return { label: '🤝 Connect', disabled: false, style: 'default' }
+    if (conn.status === 'pending')  return { label: '⏳ Pending', disabled: true, style: 'pending' }
+    if (conn.status === 'active')   return { label: '✅ Connected', disabled: true, style: 'active' }
+    if (conn.status === 'blocked')  return { label: '🚫 Blocked', disabled: true, style: 'blocked' }
+    return { label: '🤝 Connect', disabled: false, style: 'default' }
+  }
 
   const filtered = influencers.filter(inf => {
-    const matchFilter = filter === 'all' || inf.platform === filter
-    const matchSearch = !search || [inf.name, inf.niche, inf.bio].some(t => t.toLowerCase().includes(search.toLowerCase()))
-    return matchFilter && matchSearch
+    const matchSearch = !search || [inf.name, inf.bio].some(t =>
+      t?.toLowerCase().includes(search.toLowerCase())
+    )
+    return matchSearch
   })
 
-  const handleCampaignSubmit = (form) => {
-    const msgs = { live: 'Campaign created and published!', private: 'Private campaign created.', draft: 'Campaign saved as draft.' }
-    showToast(msgs[form.status] || 'Campaign created!', 'success')
+  const handleCampaignSubmit = async (form) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { showToast('Not logged in', 'error'); return }
+    const res = await fetch('/api/auth/profile?email=' + encodeURIComponent(user.email))
+    const { profile } = await res.json()
+    if (!profile) { showToast('Profile not found', 'error'); return }
+
+    const campaignRes = await fetch('/api/campaigns', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...form, client_id: profile.id })
+    })
+    const payload = await campaignRes.json()
+    if (!campaignRes.ok) { showToast(payload.error || 'Failed to create campaign', 'error'); return }
+
+    const msgs = { public: 'Campaign published!', private: 'Private campaign created.', draft: 'Campaign saved as draft.' }
+    showToast(msgs[form.type] || 'Campaign created!', 'success')
     setShowModal(false)
   }
 
@@ -33,6 +117,7 @@ export default function ClientDashboard() {
     <div className="dashboard-body">
       <DashboardNav role="client" />
       <div className="dashboard-container">
+
         <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div className="header-content" style={{ marginBottom: 0 }}>
             <h1>Find Perfect Influencers</h1>
@@ -44,10 +129,18 @@ export default function ClientDashboard() {
         </div>
 
         <div className="quick-stats" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-          {[['👁️','3,582','Total Views'],['📨','28','Proposals Received'],['🤝','12','Active Connections'],['📊','5','Active Campaigns']].map(([icon,val,label]) => (
+          {[
+            ['👥', influencers.length, 'Total Influencers'],
+            ['🤝', Object.values(connMap).filter(c => c.status === 'active').length,  'Active Connections'],
+            ['⏳', Object.values(connMap).filter(c => c.status === 'pending').length, 'Pending Requests'],
+            ['📊', '—', 'Active Campaigns'],
+          ].map(([icon, val, label]) => (
             <div key={label} className="stat-card glass">
               <div className="stat-icon">{icon}</div>
-              <div className="stat-info"><span className="stat-value">{val}</span><span className="stat-label">{label}</span></div>
+              <div className="stat-info">
+                <span className="stat-value">{val}</span>
+                <span className="stat-label">{label}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -55,61 +148,85 @@ export default function ClientDashboard() {
         <div className="search-section glass">
           <div className="search-bar">
             <span className="search-icon">🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search influencers by name, niche, or platform..." />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search influencers by name or bio..."
+            />
           </div>
           <div className="filter-buttons">
-            {[['all','All Influencers'],['instagram','Instagram'],['youtube','YouTube'],['tiktok','TikTok'],['twitter','Twitter']].map(([val,label]) => (
-              <button key={val} className={`filter-btn${filter===val?' active':''}`} onClick={() => setFilter(val)}>{label}</button>
+            {[['all','All Influencers'],['connected','Connected'],['pending','Pending']].map(([val,label]) => (
+              <button
+                key={val}
+                className={`filter-btn${filter === val ? ' active' : ''}`}
+                onClick={() => setFilter(val)}
+              >{label}</button>
             ))}
           </div>
         </div>
 
         <div className="influencers-grid">
-          {filtered.map(inf => (
-            <div key={inf.id} className="influencer-card glass" data-platform={inf.platform}>
-              <div className="card-header">
-                <img src={inf.avatar} alt={inf.name} className="influencer-avatar" />
-                <div className="verification-badge">✓</div>
-              </div>
-              <div className="card-body">
-                <h3>{inf.name}</h3>
-                <p className="niche">{inf.niche}</p>
-                <div className="platform-stats">
-                  <div className="platform-item">
-                    <span className="platform-icon">{inf.platformIcon}</span>
-                    <div className="platform-info">
-                      <span className="platform-name">{inf.platformLabel}</span>
-                      <span className="followers">{inf.followers}</span>
-                    </div>
-                  </div>
-                  <div className="engagement-rate">
-                    <span className="rate-label">{inf.engagementLabel || 'Engagement:'}</span>
-                    <span className="rate-value">{inf.engagement}</span>
-                  </div>
-                </div>
-                <div className="bio">{inf.bio}</div>
-                <div className="tags">
-                  {inf.tags.map(tag => <span key={tag} className="tag">{tag}</span>)}
-                </div>
-                <div className="card-stats">
-                  <div className="stat-item"><span className="stat-number">{inf.campaigns}</span><span className="stat-text">Campaigns</span></div>
-                  <div className="stat-item"><span className="stat-number">{inf.rate}</span><span className="stat-text">Avg. Rate</span></div>
-                  <div className="stat-item"><span className="stat-number">{inf.rating}</span><span className="stat-text">Rating</span></div>
-                </div>
-              </div>
-              <div className="card-footer">
-                <button className="btn-view-profile" onClick={() => showToast('Opening full profile...', 'info')}>View Profile</button>
-                <button className="btn-contact" onClick={() => showToast('Opening message composer...', 'info')}>Contact</button>
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
+          {loading && (
             <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-              <div className="empty-icon">🔍</div>
-              <h3>No influencers found</h3>
-              <p>Try adjusting your search or filters</p>
+              <div className="empty-icon">⏳</div>
+              <h3>Loading influencers...</h3>
             </div>
           )}
+
+          {!loading && filtered.length === 0 && (
+            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+              <div className="empty-icon">👥</div>
+              <h3>{search ? 'No influencers found' : 'No influencers yet'}</h3>
+              <p>{search ? 'Try adjusting your search' : 'Influencers will appear here once they sign up'}</p>
+            </div>
+          )}
+
+          {!loading && filtered
+            .filter(inf => {
+              if (filter === 'connected') return connMap[inf.id]?.status === 'active'
+              if (filter === 'pending')   return connMap[inf.id]?.status === 'pending'
+              return true
+            })
+            .map(inf => {
+              const btn = getConnButton(inf)
+              return (
+                <div key={inf.id} className="influencer-card glass">
+                  <div className="card-header">
+                    <img
+                      src={inf.avatar_url || `https://i.pravatar.cc/150?u=${inf.id}`}
+                      alt={inf.name}
+                      className="influencer-avatar"
+                    />
+                    {connMap[inf.id]?.status === 'active' && (
+                      <div className="verification-badge" title="Connected">✓</div>
+                    )}
+                    {connMap[inf.id]?.status === 'pending' && (
+                      <div className="verification-badge pending-badge" title="Pending">⏳</div>
+                    )}
+                  </div>
+                  <div className="card-body">
+                    <h3>{inf.name}</h3>
+                    <p className="niche">{inf.bio || 'Content Creator'}</p>
+                    <div className="bio" style={{ marginTop: '0.75rem' }}>{inf.bio || ''}</div>
+                  </div>
+                  <div className="card-footer">
+                    <button
+                      className={`btn-contact connect-btn connect-btn--${btn.style}`}
+                      onClick={() => handleConnect(inf)}
+                      disabled={btn.disabled}
+                    >
+                      {btn.label}
+                    </button>
+                    <button
+                      className="btn-view-profile"
+                      onClick={() => showToast('Full profile view coming soon', 'info')}
+                    >
+                      View Profile
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
         </div>
       </div>
 
