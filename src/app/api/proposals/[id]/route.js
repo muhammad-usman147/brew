@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 // PATCH /api/proposals/:id — accept or decline
 export async function PATCH(request, { params }) {
+  const { id } = await params
   const body = await request.json()
   const { status } = body
 
@@ -14,7 +15,7 @@ export async function PATCH(request, { params }) {
   const { data, error } = await supabaseAdmin
     .from('proposals')
     .update({ status })
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 

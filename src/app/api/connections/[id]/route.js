@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 // PATCH /api/connections/:id — accept/block a connection
 export async function PATCH(request, { params }) {
+  const { id } = await params
   const body = await request.json()
   const { status } = body
 
@@ -14,7 +15,7 @@ export async function PATCH(request, { params }) {
   const { data, error } = await supabaseAdmin
     .from('connections')
     .update({ status })
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 

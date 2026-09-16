@@ -3,10 +3,11 @@ import { NextResponse } from 'next/server'
 
 // GET /api/clients/:id
 export async function GET(request, { params }) {
+  const { id } = await params
   const { data, error } = await supabaseAdmin
     .from('clients')
     .select('id, public_id, name, company_name, avatar_url, website, industry, description')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 })
@@ -15,13 +16,14 @@ export async function GET(request, { params }) {
 
 // PATCH /api/clients/:id
 export async function PATCH(request, { params }) {
+  const { id } = await params
   const body = await request.json()
-  const { id, email, created_at, ...updateData } = body
+  const { id: _id, email, created_at, ...updateData } = body
 
   const { data, error } = await supabaseAdmin
     .from('clients')
     .update(updateData)
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 

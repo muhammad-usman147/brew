@@ -20,6 +20,11 @@
   box-shadow: var(--shadow-md);
 }
 
+.btn-primary:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: var(--shadow-sm);
+}
+
 .btn-secondary {
   background: var(--white);
   color: var(--text-dark);
@@ -28,6 +33,7 @@
 
 .btn-secondary:hover {
   background: var(--card-bg);
+  border-color: var(--primary-orange);
 }
 
 .btn-outline {

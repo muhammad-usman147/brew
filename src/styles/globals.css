@@ -15,6 +15,7 @@
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 140, 66, 0.2);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --tap: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,12 +27,16 @@ body {
   color: var(--text-dark);
   line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', Georgia, serif;
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: -0.015em;
   color: var(--text-dark);
 }
 
@@ -40,6 +45,32 @@ h2 { font-size: clamp(2rem, 4vw, 3.5rem); margin-bottom: 1rem; }
 h3 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: 0.75rem; }
 
 p { font-size: 1.125rem; color: var(--text-dark); opacity: 0.9; }
+
+/* ── Professional button micro-interactions ──────────────────────────────
+   Applies to every real <button> in the app on top of each component's own
+   hover styling: a crisp press-down on click and an accessible focus ring. */
+button {
+  transition: var(--transition), var(--tap);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--primary-orange);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none !important;
+}
+
+@media (max-width: 480px) {
+  h1 { letter-spacing: -0.01em; }
+}
 
 .glass {
   background: var(--glass-bg);

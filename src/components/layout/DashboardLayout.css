@@ -11,6 +11,12 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard-body {
+    /* Nav becomes position: static on phones (see DashboardNav.css),
+       so the fixed-nav offset is no longer needed here. */
+    padding-top: 0;
+  }
+
   .dashboard-container {
     padding: 1rem;
   }

@@ -3,10 +3,11 @@ import { NextResponse } from 'next/server'
 
 // GET /api/campaigns/:id
 export async function GET(request, { params }) {
+  const { id } = await params
   const { data, error } = await supabaseAdmin
     .from('campaigns')
     .select('*, clients(id, public_id, name, company_name, avatar_url)')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 })
@@ -15,12 +16,13 @@ export async function GET(request, { params }) {
 
 // PATCH /api/campaigns/:id — update campaign
 export async function PATCH(request, { params }) {
+  const { id } = await params
   const body = await request.json()
 
   const { data, error } = await supabaseAdmin
     .from('campaigns')
     .update(body)
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 
@@ -30,10 +32,11 @@ export async function PATCH(request, { params }) {
 
 // DELETE /api/campaigns/:id
 export async function DELETE(request, { params }) {
+  const { id } = await params
   const { error } = await supabaseAdmin
     .from('campaigns')
     .delete()
-    .eq('id', params.id)
+    .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ message: 'Campaign deleted' })

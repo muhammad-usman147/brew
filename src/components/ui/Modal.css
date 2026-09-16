@@ -67,3 +67,28 @@
   padding-top: 1.5rem;
   border-top: 2px solid rgba(255, 140, 66, 0.1);
 }
+
+@media (max-width: 768px) {
+  .modal {
+    padding: 1rem;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-height: 92vh;
+    padding: 1.5rem;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+}
