@@ -1,5 +1,5 @@
 'use client'
-import MessagesPage from '@/pages/shared/MessagesPage'
+import MessagesPage from '@/views/shared/MessagesPage'
 
 export default function ClientMessagesPage() {
   return <MessagesPage role="client" />

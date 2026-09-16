@@ -1,5 +1,5 @@
 // Landing page — renders the existing Landing component
-import Landing from '@/pages/Landing'
+import Landing from '@/views/Landing'
 
 export default function Home() {
   return <Landing />

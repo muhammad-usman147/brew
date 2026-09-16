@@ -1,5 +1,5 @@
 'use client'
-import ClientCampaigns from '@/pages/client/ClientCampaigns'
+import ClientCampaigns from '@/views/client/ClientCampaigns'
 
 export default function ClientCampaignsPage() {
   return <ClientCampaigns />

@@ -1,5 +1,5 @@
 'use client'
-import ClientDashboard from '@/pages/client/ClientDashboard'
+import ClientDashboard from '@/views/client/ClientDashboard'
 
 export default function ClientDashboardPage() {
   return <ClientDashboard />
